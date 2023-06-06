@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Yoga Timer</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
+
+  </head>
+  <body onload="onloadHandler()">
+    <div class="container-fluid pg-3" style="padding-top: 10px;">
+        <h3>Yoga Timer</h3>
+        <div class="row">
+            <div class="col">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td style="width: 100px;">Sets</td>
+                            <td style="width: 100px;"><span id="sets">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Reps</td>
+                            <td><span id="reps">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Work</td>
+                            <td><span id="work">0</span> secs</td>
+                        </tr>
+                        <tr>
+                            <td>Rest</td>
+                            <td><span id="rest">0</span> secs</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 10px;">
+            <div class="col">
+                <button id="start-button" type="button" class="btn btn-primary"> Start </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col" style="margin-top: 10px;">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td style="width: 100px;">Current Step</td>
+                            <td style="width: 100px;">
+                                <span id="current-step" class="badge text-bg-info" style="color: white!important;">
+                                    PREP
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Status</td>
+                            <td><span id="status" class="badge text-bg-warning" style="color: white!important;"> READY </span></td>
+                        </tr>
+                        <tr>
+                            <td>Time Left</td>
+                            <td><span id="countdown">0</span> secs</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col" style="margin-top: 10px;">
+                <div class="progress">
+                  <div id="myBar" class="progress-bar bg-info" role="progressbar" aria-label="Info example" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var urlParams;
+        (window.onpopstate = function () {
+            var match,
+                pl     = /\+/g,  // Regex for replacing addition symbol with a space
+                search = /([^&=]+)=?([^&]*)/g,
+                decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+                query  = window.location.search.substring(1);
+
+            urlParams = {};
+            while (match = search.exec(query))
+               urlParams[decode(match[1])] = decode(match[2]);
+        })();
+
+
+       function unlockAudioContext(audioCtx) {
+           if (audioCtx.state !== 'suspended') return;
+           const b = document.body;
+           const events = ['touchstart', 'touchend', 'mousedown', 'keydown'];
+           events.forEach(e => b.addEventListener(e, unlock, false));
+
+           function unlock() {
+               audioCtx.resume().then(clean);
+           }
+
+           function clean() {
+               events.forEach(e => b.removeEventListener(e, unlock));
+           }
+       }
+
+
+        var setsTotal = urlParams["sets"]
+        var sets = setsTotal
+        var repsTotal = urlParams["reps"]
+        var reps = repsTotal
+        var work = urlParams["work"]
+        var rest = urlParams["rest"]
+        var prep = urlParams["prep"]
+
+        var timer = null
+
+        // Run this when the page loads
+        function onloadHandler() {
+            $("#sets").html(`${sets} of ${setsTotal}`)
+            $("#reps").html(`${reps} of ${repsTotal}`)
+            $("#work").html(`${work}`)
+            $("#rest").html(`${rest}`)
+
+            $("#start-button").on("click", function() {
+                initializeAudioContexts()
+                startTimer()
+            })
+        }
+
+        // Start the timer - this is run after the start button is clicked
+        function startTimer() {
+            if (timer != null) {
+                console.log("startTimer: Not proceeding with strting a new timer as `timer` is not null.")
+                return
+            }
+            let currentStep = "PREP"
+            let countdown = prep
+            timeoutSecs1 = countdown
+
+            $("#current-step").removeClass("text-bg-danger")
+            $("#current-step").addClass("text-bg-info")
+            $("#current-step").html(" PREP ")
+
+            // Update the countdown every 1 second
+            timer = setInterval(function () {
+                $("#status").removeClass("text-bg-success")
+                $("#status").addClass("text-bg-warning")
+                $("#status").html(" RUNNING ")
+
+                countdown = countdown - 1
+                if (countdown <= 0) {
+                    //beep()
+
+                    if (currentStep == "PREP" || currentStep == "REST") {
+                        currentStep = "WORK"
+                        countdown = work
+                        timeoutSecs1 = countdown
+                        audioWork()
+                        // Update the UI
+                        $("#current-step").removeClass("text-bg-info")
+                        $("#current-step").addClass("text-bg-danger")
+                        $("#current-step").html(" WORK ")
+                    } else {
+                        currentStep = "REST"
+                        countdown = rest
+                        timeoutSecs1 = countdown
+                        reps--
+                        audioRest()
+                        // Update the UI
+                        $("#current-step").removeClass("text-bg-danger")
+                        $("#current-step").addClass("text-bg-info")
+                        $("#current-step").html(" REST ")
+
+                        if (reps <= 0) {
+                            clearInterval(timer)
+                            timer = null
+                            sets--
+                            reps = repsTotal
+                            // Update status in UI
+                            $("#status").removeClass("text-bg-warning")
+                            $("#status").addClass("text-bg-success")
+                            $("#status").html(" DONE ")
+                            // Update sets
+                            $("#sets").html(`${sets} of ${setsTotal}`)
+                        }
+                        // Update reps
+                        $("#reps").html(`${reps} of ${repsTotal}`)
+                    }
+                }
+
+                document.getElementById("countdown").innerHTML = " " + countdown + " ";
+
+                let pct = 100.0 * countdown / timeoutSecs1
+                var elem = document.getElementById("myBar");
+                elem.style.width = pct + "%";
+            }, 1000);
+        }
+
+        function beep() {
+            var snd = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");
+            snd.play();
+        }
+
+        var audioContext = null
+        var audioContext
+
+        // On iOS, audio context must be initialized when the user clicks on a button. Otherwise audio will not work.
+        function initializeAudioContexts() {
+            if (audioContext == null) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                unlockAudioContext(audioContext);
+                audioContext.resume()
+            }
+        }
+
+        function audioWork() {
+            var oscillatorWork = audioContext.createOscillator();
+            oscillatorWork.type = "sine";
+            oscillatorWork.frequency.value = 1000;
+            oscillatorWork.connect(audioContext.destination);
+            oscillatorWork.start();
+            // Beep for 300 milliseconds
+            setTimeout(function () {
+                oscillatorWork.stop();
+            }, 300);
+        }
+
+        function audioRest() {
+            var oscillatorRest = audioContext.createOscillator();
+            oscillatorRest.type = "sine";
+            oscillatorRest.frequency.value = 300;
+            oscillatorRest.connect(audioContext.destination);
+            oscillatorRest.start();
+            // Beep for 300 milliseconds
+            setTimeout(function () {
+                oscillatorRest.stop();
+            }, 500);
+        }
+    </script>
+    <style>
+        #myProgress {
+            width: 100%;
+            background-color: #f5f5f5;
+            border: 1px solid #dadada;
+            border-radius: 4px;
+            -webkit-box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+        }
+
+        #myBar {
+            width: 100%;
+            height: 30px;
+            background-color: #337ab7;
+            font-size: 12px;
+            line-height: 20px;
+            color: #fff;
+            text-align: center;
+            -webkit-box-shadow: inset 0 -1px 0 rgba(0,0,0,.15);
+            box-shadow: inset 0 -1px 0 rgba(0,0,0,.15);
+            -webkit-transition: width .6s ease;
+            -o-transition: width .6s ease;
+            transition: width .6s ease;
+        }
+    </style>
+  </body>
+</html>
