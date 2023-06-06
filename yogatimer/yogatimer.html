@@ -180,8 +180,7 @@
                             timer = null
                             sets--
                             reps = repsTotal
-                            audioRest()
-                            audioRest()
+                            audioDone()
                             // Update status in UI
                             $("#status").removeClass("text-bg-warning")
                             $("#status").addClass("text-bg-success")
@@ -222,7 +221,7 @@
         function audioWork() {
             var oscillatorWork = audioContext.createOscillator();
             oscillatorWork.type = "sine";
-            oscillatorWork.frequency.value = 1000;
+            oscillatorWork.frequency.value = 880;
             oscillatorWork.connect(audioContext.destination);
             oscillatorWork.start();
             // Beep for 300 milliseconds
@@ -234,7 +233,7 @@
         function audioRest() {
             var oscillatorRest = audioContext.createOscillator();
             oscillatorRest.type = "sine";
-            oscillatorRest.frequency.value = 300;
+            oscillatorRest.frequency.value = 220;
             oscillatorRest.connect(audioContext.destination);
             oscillatorRest.start();
             // Beep for 300 milliseconds
@@ -242,6 +241,18 @@
                 oscillatorRest.stop();
             }, 500);
         }
+      
+        function audioDone() {
+            var oscillatorRest = audioContext.createOscillator();
+            oscillatorRest.type = "sine";
+            oscillatorRest.frequency.value = 440;
+            oscillatorRest.connect(audioContext.destination);
+            oscillatorRest.start();
+            // Beep for 300 milliseconds
+            setTimeout(function () {
+                oscillatorRest.stop();
+            }, 1500);
+        }      
     </script>
     <style>
         #myProgress {
