@@ -164,6 +164,8 @@
                         $("#current-step").removeClass("text-bg-info")
                         $("#current-step").addClass("text-bg-danger")
                         $("#current-step").html(" WORK ")
+                        $("#myBar").removeClass("bg-info") 
+                        $("#myBar").addClass("bg-danger") 
                     } else {
                         currentStep = "REST"
                         countdown = rest
@@ -174,6 +176,8 @@
                         $("#current-step").removeClass("text-bg-danger")
                         $("#current-step").addClass("text-bg-info")
                         $("#current-step").html(" REST ")
+                        $("#myBar").removeClass("bg-danger") 
+                        $("#myBar").addClass("bg-info") 
 
                         if (reps <= 0) {
                             clearInterval(timer)
