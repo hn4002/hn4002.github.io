@@ -17,23 +17,43 @@
         <h3>Yoga Timer</h3>
         <div class="row">
             <div class="col">
-                <table>
-                    <tbody>
-                        <tr>
+                <table style="width: 100%;">
+                    <tbody style="max-width: 100%;">
+                        <tr style="max-width: 100%;">
                             <td style="width: 100px;">Sets Left </td>
                             <td style="width: 100px;"><span id="sets">0</span></td>
+                            <td style="min-width: 100px; max-width: 100%;">
+                                <div class="progress">
+                                  <div id="sets-pbar" class="progress-bar bg-info" role="progressbar" aria-label="Info example" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </td>
                         </tr>
                         <tr>
                             <td>Reps Left </td>
                             <td><span id="reps">0</span></td>
+                            <td>
+                                <div class="progress">
+                                  <div id="reps-pbar" class="progress-bar bg-info" role="progressbar" aria-label="Info example" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </td>
                         </tr>
                         <tr>
                             <td>Work </td>
                             <td><span id="work">0</span> secs</td>
+                            <td>
+                                <div class="progress">
+                                  <div id="work-pbar" class="progress-bar bg-danger" role="progressbar" aria-label="Info example" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </td>
                         </tr>
                         <tr>
                             <td>Rest </td>
                             <td><span id="rest">0</span> secs</td>
+                            <td>
+                                <div class="progress">
+                                  <div id="rest-pbar" class="progress-bar bg-info" role="progressbar" aria-label="Info example" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -70,7 +90,7 @@
         </div>
         <div class="row">
             <div class="col" style="margin-top: 10px;">
-                <div class="progress">
+                <div class="progress" style="display: none">
                   <div id="myBar" class="progress-bar bg-info" role="progressbar" aria-label="Info example" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
             </div>
@@ -191,17 +211,25 @@
                             $("#status").html(" DONE ")
                             // Update sets
                             $("#sets").html(`${sets} of ${setsTotal}`)
+                            $("#sets-pbar").css("width", `${100.0 * sets/setsTotal}%`)
                         }
                         // Update reps
                         $("#reps").html(`${reps} of ${repsTotal}`)
+                        $("#reps-pbar").css("width", `${100.0 * reps/repsTotal}%`)
                     }
                 }
 
                 document.getElementById("countdown").innerHTML = " " + countdown + " ";
 
-                let pct = 100.0 * countdown / timeoutSecs1
-                var elem = document.getElementById("myBar");
-                elem.style.width = pct + "%";
+                $("#myBar").css("width", `${100.0 * countdown/timeoutSecs1}%`)
+                if (currentStep == "REST") {
+                    $("#work-pbar").css("width", `100%`)
+                    $("#rest-pbar").css("width", `${100.0 * countdown/timeoutSecs1}%`)
+                }
+                else if (currentStep == "WORK") {
+                    $("#rest-pbar").css("width", `100%`)
+                    $("#work-pbar").css("width", `${100.0 * countdown/timeoutSecs1}%`)
+                }
             }, 1000);
         }
 
