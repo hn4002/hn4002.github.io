@@ -17,43 +17,19 @@
         <h3>Yoga Timer</h3>
         <div class="row">
             <div class="col">
-                <table style="width: 100%;">
-                    <tbody style="max-width: 100%;">
-                        <tr style="max-width: 100%;">
-                            <td style="width: 100px;">Sets Left </td>
-                            <td style="width: 100px;"><span id="sets">0</span></td>
-                            <td style="min-width: 100px; max-width: 100%;">
-                                <div class="progress">
-                                  <div id="sets-pbar" class="progress-bar bg-info" role="progressbar" aria-label="Info example" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                            </td>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td style="width: 80px;">Sets Left: </td>
+                            <td style="width: 60px;"><span id="sets">0</span></td>
+                            <td style="width: 60px; border-left: 1px #ccc solid; padding-left: 10px;">Work: </td>
+                            <td style="width: 60px;"><span id="work">0</span> secs</td>
                         </tr>
                         <tr>
-                            <td>Reps Left </td>
+                            <td>Reps Left: </td>
                             <td><span id="reps">0</span></td>
-                            <td>
-                                <div class="progress">
-                                  <div id="reps-pbar" class="progress-bar bg-info" role="progressbar" aria-label="Info example" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Work </td>
-                            <td><span id="work">0</span> secs</td>
-                            <td>
-                                <div class="progress">
-                                  <div id="work-pbar" class="progress-bar bg-danger" role="progressbar" aria-label="Info example" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Rest </td>
+                            <td style="border-left: 1px #ccc solid; padding-left: 10px;">Rest: </td>
                             <td><span id="rest">0</span> secs</td>
-                            <td>
-                                <div class="progress">
-                                  <div id="rest-pbar" class="progress-bar bg-info" role="progressbar" aria-label="Info example" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -65,39 +41,8 @@
             </div>
         </div>
         <div class="row">
-            <div class="col" style="margin-top: 10px;">
-                <table>
-                    <tbody>
-                        <tr>
-                            <td style="width: 100px;">Current Step</td>
-                            <td style="width: 100px;">
-                                <span id="current-step" class="badge text-bg-info" style="color: white!important;">
-                                    PREP
-                                </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Status</td>
-                            <td><span id="status" class="badge text-bg-warning" style="color: white!important;"> READY </span></td>
-                        </tr>
-                        <tr>
-                            <td>Time Left</td>
-                            <td><span id="countdown">0</span> secs</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col" style="margin-top: 10px;">
-                <div class="progress" style="display: none">
-                  <div id="myBar" class="progress-bar bg-info" role="progressbar" aria-label="Info example" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                 <canvas id="canvas" width="400" height="400" style="background-color:#fff"></canvas>
+            <div class="col" style="padding: 0;">
+                 <canvas id="canvas" width="390" height="390" style="background-color:#fff"></canvas>
             </div>
         </div>
     </div>
@@ -168,16 +113,8 @@
             let countdown = prep
             timeoutSecs1 = countdown
 
-            $("#current-step").removeClass("text-bg-danger")
-            $("#current-step").addClass("text-bg-info")
-            $("#current-step").html(" PREP ")
-
             // Update the countdown every 1 second
             timer = setInterval(function () {
-                $("#status").removeClass("text-bg-success")
-                $("#status").addClass("text-bg-warning")
-                $("#status").html(" RUNNING ")
-
                 countdown = countdown - 1
                 if (countdown < 0) {
                     //beep()
@@ -187,24 +124,12 @@
                         countdown = work
                         timeoutSecs1 = countdown
                         audioWork()
-                        // Update the UI
-                        $("#current-step").removeClass("text-bg-info")
-                        $("#current-step").addClass("text-bg-danger")
-                        $("#current-step").html(" WORK ")
-                        $("#myBar").removeClass("bg-info") 
-                        $("#myBar").addClass("bg-danger") 
                     } else {
                         currentStep = "REST"
                         countdown = rest
                         timeoutSecs1 = countdown
                         reps--
                         audioRest()
-                        // Update the UI
-                        $("#current-step").removeClass("text-bg-danger")
-                        $("#current-step").addClass("text-bg-info")
-                        $("#current-step").html(" REST ")
-                        $("#myBar").removeClass("bg-danger") 
-                        $("#myBar").addClass("bg-info") 
 
                         if (reps <= 0) {
                             clearInterval(timer)
@@ -212,31 +137,15 @@
                             sets--
                             reps = repsTotal
                             audioDone()
-                            // Update status in UI
-                            $("#status").removeClass("text-bg-warning")
-                            $("#status").addClass("text-bg-success")
-                            $("#status").html(" DONE ")
                             // Update sets
                             $("#sets").html(`${sets} of ${setsTotal}`)
-                            $("#sets-pbar").css("width", `${100.0 * sets/setsTotal}%`)
                         }
                         // Update reps
                         $("#reps").html(`${reps} of ${repsTotal}`)
-                        $("#reps-pbar").css("width", `${100.0 * reps/repsTotal}%`)
                     }
                 }
 
-                document.getElementById("countdown").innerHTML = " " + countdown + " ";
-
-                $("#myBar").css("width", `${100.0 * countdown/timeoutSecs1}%`)
-                if (currentStep == "REST") {
-                    $("#work-pbar").css("width", `100%`)
-                    $("#rest-pbar").css("width", `${100.0 * countdown/timeoutSecs1}%`)
-                }
-                else if (currentStep == "WORK") {
-                    $("#rest-pbar").css("width", `100%`)
-                    $("#work-pbar").css("width", `${100.0 * countdown/timeoutSecs1}%`)
-                }
+                // Update the CountDown UI
                 drawCountDown(currentStep, 0, countdown, 100.0 - 100.0 * countdown/timeoutSecs1, reps)
             }, 1000);
         }
