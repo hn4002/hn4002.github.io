@@ -70,3 +70,12 @@ rest.json - github returns it like a normal json file with "application/json" co
 * Connection #0 to host hn4002.github.io left intact
 
 ```
+
+# For Testing
+
+Use following URL:
+
+    * https://hn4002-github.localhost.net/
+
+
+

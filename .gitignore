@@ -1,0 +1,79 @@
+# Files to ignored by git and avoid staging
+
+# Eclipse Project related files
+.project
+.settings
+.classpath
+.springBeans
+
+# IntelliJ Project files
+*.iml
+*.ipr
+*.iws
+.idea
+
+# Mac OS X files
+.DS_Store
+
+# Maven Build output
+target/
+bin/
+
+# Log files
+*.log
+
+# temp directory
+workdir/
+
+#intelij/pycharm
+*.idea
+*.iml
+*.eml
+
+# Vim files
+*.swp
+*.swo
+
+# Compiled source #
+###################
+*.pyc
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+temp_persist_config*.xml
+*.ttf
+*.tlog
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases #
+######################
+*.log
+**/logs
+
+# OS generated files #
+######################
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# eUML plugin stuff
+**/.euml2
+**/.umlproject
+
+

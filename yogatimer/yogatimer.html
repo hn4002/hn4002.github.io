@@ -95,6 +95,11 @@
                 </div>
             </div>
         </div>
+        <div class="row">
+            <div class="col">
+                 <canvas id="canvas" width="400" height="400" style="background-color:#fff"></canvas>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -145,6 +150,8 @@
             $("#work").html(`${work}`)
             $("#rest").html(`${rest}`)
 
+            drawCountDown("PREP", 0, 0, 100, 0)
+
             $("#start-button").on("click", function() {
                 initializeAudioContexts()
                 startTimer()
@@ -172,7 +179,7 @@
                 $("#status").html(" RUNNING ")
 
                 countdown = countdown - 1
-                if (countdown <= 0) {
+                if (countdown < 0) {
                     //beep()
 
                     if (currentStep == "PREP" || currentStep == "REST") {
@@ -230,7 +237,84 @@
                     $("#rest-pbar").css("width", `100%`)
                     $("#work-pbar").css("width", `${100.0 * countdown/timeoutSecs1}%`)
                 }
+                drawCountDown(currentStep, 0, countdown, 100.0 - 100.0 * countdown/timeoutSecs1, reps)
             }, 1000);
+        }
+
+        function drawCountDown(currentStep, minsLeft, secsLeft, pctDone, roundsLeft)
+        {
+            console.log("minsLeft, secsLeft, pctDone = ", minsLeft, secsLeft, pctDone)
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            let center_x = canvas.width / 2
+            let center_y = canvas.height / 2
+            let max_radius = Math.min(canvas.width, canvas.height) / 2
+
+            let radius = max_radius * 0.90
+
+            // Fill the circle with solid color
+            ctx.arc(center_x, center_y, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = "rgba(13,168,231)";
+            ctx.fill();
+
+            // Outer circle
+            ctx.beginPath();
+            let grad = ctx.createRadialGradient(center_x, center_y, radius * 0.95, center_x, center_y, radius * 1.05);
+            grad.addColorStop(0, '#034159');
+            grad.addColorStop(0.5, '#85cae3');
+            grad.addColorStop(1, '#034159');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = radius*0.1;
+            ctx.arc(center_x, center_y, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+
+            // Light inner full circle
+            ctx.beginPath();
+            radius = max_radius * 0.70
+            let gradInner = ctx.createRadialGradient(center_x, center_y, radius * 0.95, center_x, center_y, radius * 1.05);
+            gradInner.addColorStop(0, '#03500A36');
+            gradInner.addColorStop(0.5, '#03500A36');
+            gradInner.addColorStop(1, '#03500A36');
+            ctx.strokeStyle = gradInner
+            ctx.arc(center_x, center_y, radius, -0.5 * Math.PI, 1.5 * Math.PI);
+            ctx.stroke();
+
+            // Darker inner circle for progress
+            if (pctDone > 0.1) {
+                ctx.beginPath();
+                radius = max_radius * 0.70
+                let gradInner2 = ctx.createRadialGradient(center_x, center_y, radius * 0.95, center_x, center_y, radius * 1.05);
+                gradInner2.addColorStop(0, '#03500a');
+                gradInner2.addColorStop(0.5, 'rgba(38,133,45,0.4)');
+                gradInner2.addColorStop(1, '#03500a');
+                ctx.strokeStyle = gradInner2
+                let endArc = 2 * Math.PI * pctDone / 100 - 0.5 * Math.PI
+                ctx.arc(center_x, center_y, radius, -0.5 * Math.PI, endArc);
+                ctx.stroke();
+            }
+
+            // Draw Text - Current Step
+            ctx.font = max_radius * 0.20 + "px Arial";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "rgba(232,223,59,1.0)"
+            ctx.fillText(currentStep, center_x, center_y - max_radius * 0.35);
+
+            // Draw Text - Countdown
+            ctx.font = max_radius * 0.50 + "px Arial";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#e6f3ff"
+            let text = minsLeft.toString().padStart(2, '0') + ":" + secsLeft.toString().padStart(2, '0')
+            ctx.fillText(text, center_x, center_y);
+
+            // Draw Text - Rounds Left
+            ctx.font = max_radius * 0.20 + "px Arial";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "rgba(232,223,59,1.0)"
+            ctx.fillText(roundsLeft, center_x, center_y + max_radius * 0.35);
+
         }
 
         function beep() {
