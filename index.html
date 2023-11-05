@@ -18,11 +18,68 @@
     </head>
 
     <body>
-        <a href="yogatimer/yogatimer-list.html">Yoga Timers</a>
-        
-        
-        <!-- script src="myscripts.js"></script -->
+         <section>
+            <div class="headline expanded">
+                <h3>
+                    <span>Yoga</span>
+                </h3>
+            </div>
+            <ul>
+                <li><a href="yoga/pranayam.html">Pranayam</a></li>
+                <li><a href="yoga/exercise.html">Exercise</a></li>
+            </ul>
+        </section>
+
+         <section>
+            <div class="headline expanded">
+                <h3>
+                    <span>Exercises</span>
+                </h3>
+            </div>
+            <ul>
+                <li><a href="exercises/shuolder-exercise-list.html">Shoulder Exercises</a></li>
+            </ul>
+        </section>
 
     </body>
+
+
+    <style>
+        section {
+            margin: 20px 0;
+            padding: 0;
+        }
+
+        .headline {
+            background: rgba(206, 227, 245, 0.3) none repeat scroll 0 0;
+            /*
+            background: rgba(196, 217, 255, 0.3) none repeat scroll 0 0;
+            background: #009cde none repeat scroll 0 0;
+            */
+            border-radius: 5px;
+            margin: 10px 0;
+            padding: 10px;
+        }
+
+        .headline h3 {
+            font-size: 18px;
+            margin: 0;
+            padding: 0;
+        }
+        .headline h3 .glyphicon {
+            cursor: pointer;
+        }
+        .headline h3 span {
+            margin-right: 3px;
+        }
+        .headline h3 .badge {
+            position: relative;
+            top: -2px;
+        }
+        .headline .addToFav {
+            font-weight: 500;
+        }
+
+    </style>
 
 </html>
