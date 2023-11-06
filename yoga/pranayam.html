@@ -18,12 +18,33 @@
 
 </head>
 <body>
-<h1>Pranayam</h1>
 
 <table class="table-bordered">
     <tr>
         <td colspan="2">
             <div style="display: flex; flex-direction: row; justify-items: center; align-items: center">
+                <h1 style="margin: 1px 10px 1px 10px;">Pranayam</h1>
+                <!-- Add a button group of three buttons for 15, 30, 60 -->
+                <div class="btn-group" role="group" aria-label="Basic example">
+                    <button type="button" class="btn btn-outline-danger duration-button" id="duration-button-15"
+                            data-duration="15" style="margin: 5px 0px 5px 5px;">
+                        15
+                    </button>
+                    <button type="button" class="btn btn-outline-danger duration-button" id="duration-button-30"
+                            data-duration="30" style="margin: 5px 0px 5px 0px; border-left: 0px;">
+                        30
+                    </button>
+                    <button type="button" class="btn btn-outline-danger duration-button" id="duration-button-45"
+                            data-duration="45" style="margin: 5px 0px 5px 0px; border-left: 0px;">
+                        45
+                    </button>
+                    <button type="button" class="btn btn-outline-danger duration-button" id="duration-button-60"
+                            data-duration="60" style="margin: 5px 5px 5px 0px; border-left: 0px;">
+                        60
+                    </button>
+                </div>
+
+                <!-- Buttons for the actions  -->
                 <button type="button" class="btn btn-primary" style="margin: 5px 5px 5px 5px;"
                     onclick="start();">
                     <i class="bi-play"></i>
@@ -55,6 +76,35 @@
     </tr>
 </table>
 
+<style>
+    .step-name {
+        margin: 0px 3px 0px 3px;
+    }
+
+    .step-duration {
+        margin: 0px 3px 0px 3px;
+    }
+
+    .progress-bar-left {
+      position: absolute;
+      left: 0;
+      width: 30px;
+      text-align: center;
+      padding-top: 1px;
+      padding-left: 5px;
+    }
+
+    .progress-bar-right {
+      position: absolute;
+      right: 0;
+      width: 30px;
+      text-align: center;
+      padding-top: 1px;
+      padding-right: 50px;
+    }
+
+</style>
+
 <script>
     var player;
 
@@ -64,29 +114,222 @@
     // Speech Synthesis
     const synth = window.speechSynthesis
 
+    // Variables related to running the steps
     var currentStep = 0
-    var steps = [
-        // Step Name, Start Time, Duration (secs)
-        //["Bhastrika", "05:39", "5"],
-        //["Kapalbhati", "09:40", "5"],
-        ["Bhastrika", "05:39", "60"],
-        ["Kapalbhati", "09:40", "300"],
-        ["Brahya", "23:11", "60"],
+    var progressBarIntervalTimer = null
+
+    var stepsDefault = [
+        // Step Name, Start Time, Step Duration (secs) for totalDuration=15m
+        ["Bhastrika", "05:39", 5],
+        ["Kapalbhati", "09:40", 5],
+        //["Bhastrika", "05:39", 60],
+        //["Kapalbhati", "09:40", 300],
+        ["Brahya", "23:11", 60],
         //["Agnisaar Kriya", "25:01"],
-        ["Anulomvilom", "25:20", "300"],
-        ["Bhramari", "42:34", "60"],
-        ["Udgith", "44:11", "60"],
-        ["Om Dhyaan", "45:00", "60"],
+        ["Anulomvilom", "25:20", 300],
+        ["Bhramari", "42:34", 60],
+        ["Udgith", "44:11", 60],
+        ["Om Dhyaan", "45:00", 60],
         //["Ujjayi Pranayama", "46:40"],
         //["Shitri Pranayama", "48:48"],
         //["Sitkari Pranayama", "49:40"]
         ];
+    var steps = stepsDefault
 
     //======================================================================================================================
     $(document).ready(function () {
         loadYoutubeApiScript();
-        loadSteps();
+        $(".duration-button").click(function () {
+            let duration = $(this).data("duration")
+            selectTotalDuration(duration)
+        })
+        selectTotalDuration("15")
     });
+
+    //======================================================================================================================
+    // T O P   B A R   S E C T I O N
+    //======================================================================================================================
+
+    function selectTotalDuration(totalDuration) {
+        $durationButtons = $(".duration-button")
+        $selectedDurationButton = $("#duration-button-" + totalDuration)
+        // Remove the active class from all duration buttons
+        $durationButtons.removeClass("btn-outline-danger btn-danger")
+        // Add the active class to the selected button
+        $selectedDurationButton.addClass("btn-danger")
+        $durationButtons.not($selectedDurationButton).addClass("btn-outline-danger")
+
+        // Update the steps
+        steps = []
+        $.each(stepsDefault, function (index, value) {
+            let stepName = value[0]
+            let stepTime = value[1]
+            let stepDuration = value[2]
+            let newStepDuration = Math.round(stepDuration * totalDuration / 15)
+            steps.push([stepName, stepTime, newStepDuration])
+        })
+
+        // Show the steps in the left panel
+        showStepsInPanel(totalDuration)
+    }
+
+    //======================================================================================================================
+    function start() {
+        initializeAudioContexts()
+
+        // Start a timer to update progress bar every second
+        if (progressBarIntervalTimer == null) {
+            progressBarIntervalTimer = setInterval(function () {
+                updateProgressBar()
+            }, 1000)
+        }
+
+        // Run the first step immediately. This step which will trigger the next step once it is done.
+        runStep(0)
+    }
+
+    //======================================================================================================================
+    function runStep(stepNum) {
+        if (stepNum >= steps.length) {
+            // All steps are done. Time to wrap up.
+            // Stop the timer to update progress bar
+            if (progressBarIntervalTimer != null) {
+                clearInterval(progressBarIntervalTimer)
+                progressBarIntervalTimer = null
+            }
+            return
+        }
+        step = steps[stepNum]
+        minSecsStr = step[1]
+        // Convert minutes and seconds to seconds. Example: 1:30 = 90 secs, 1:05 = 65 secs
+        let minSecs = minSecsStr.split(":");
+        let secs = parseInt(minSecs[0]) * 60 + parseInt(minSecs[1])
+
+        player.seekTo(secs)
+        player.playVideo()
+        currentStep = stepNum
+        setTimeout(function () {
+            // Play a beep sound at the end of the step
+            playBeep(440, 1000, 'sine')
+            // Mark the progress bar complete
+            updateProgressBarComplete(stepNum)
+
+            runStep(stepNum + 1)
+        }, parseInt(step[2]) * 1000)
+    }
+
+    //======================================================================================================================
+    // L E F T  P A N E L   S E C T I O N
+    //======================================================================================================================
+
+    //======================================================================================================================
+    function showStepsInPanel(totalDuration) {
+        // Clear $("#steps-tbody")
+        $("#steps-tbody").empty();
+
+        // Add a TR element for each step
+        $.each(steps, function (index, value) {
+            addStepRowInPanel(index, value[0], value[1], value[2]);
+        });
+    }
+
+    //======================================================================================================================
+    function addStepRowInPanel(stepNum, stepName, stepTime, duration) {
+        // Convert duration to minutes and seconds. Example: 90 secs = 1:30, 65 secs = 1:05
+        let durationMinutes = Math.floor(duration / 60);
+        let durationSeconds = duration % 60;
+        if (durationMinutes < 10) {
+            durationMinutes = "0" + durationMinutes;
+        }
+        // Add leading zero if seconds is less than 10
+        if (durationSeconds < 10) {
+            durationSeconds = "0" + durationSeconds;
+        }
+        durationStr = durationMinutes + ":" + durationSeconds;
+
+        let htmlText = "<tr><td><span class='step-name'>" + stepName + "</span></td><td><span class='step-duration'>" + durationStr + "</span></td></tr>"
+        htmlText += "<tr><td colspan='2' style='padding: 0px;'>"
+        htmlText += "  <div class='progress' style='background: #aaa; border-radius: 0; position: relative;'>"
+        htmlText += `    <div class='progress-bar overflow-visible' id='progress-bar-${stepNum}' role='progressbar' style='width: 0%; border-radius: 0;' aria-valuenow='25' aria-valuemin='0' aria-valuemax='100'>`
+        htmlText += `      <span class='progress-bar-left' id='progress-bar-left-${stepNum}'></span>`
+        htmlText += `      <span class='progress-bar-right' id='progress-bar-right-${stepNum}' style='color: white;'></span>`
+        htmlText += "    </div>"
+        htmlText += "  </div>"
+        htmlText += "</td></tr>"
+        htmlText += ""
+
+        $("#steps-tbody").append(htmlText)
+    }
+
+    //======================================================================================================================
+    function updateProgressBar() {
+        // Get the current time in seconds
+        let currentTime = player.getCurrentTime()
+        // Get the current step
+        let step = steps[currentStep]
+        // Get the start time of the current step in seconds
+        let minSecsStr = step[1]
+        let minSecs = minSecsStr.split(":");
+        let secs = parseInt(minSecs[0]) * 60 + parseInt(minSecs[1])
+        // Calculate the percentage of the video that has been played
+        let percentage = ((currentTime - secs) / step[2]) * 100
+        // Update the progress bar
+        $("#progress-bar-" + currentStep).css("width", percentage + "%")
+
+        // On the left side of the progress bar, show the time elapsed in 01:33 format
+        let timeElapsed = Math.round(currentTime - secs)
+        let timeElapsedMinutes = Math.floor(timeElapsed / 60);
+        let timeElapsedSeconds = timeElapsed % 60;
+        if (timeElapsedMinutes < 10) {
+            timeElapsedMinutes = "0" + timeElapsedMinutes;
+        }
+        // Add leading zero if seconds is less than 10
+        if (timeElapsedSeconds < 10) {
+            timeElapsedSeconds = "0" + timeElapsedSeconds;
+        }
+        let timeElapsedStr = timeElapsedMinutes + ":" + timeElapsedSeconds;
+        $("#progress-bar-left-" + currentStep).text(timeElapsedStr)
+
+        // On the right side of the progress bar, show the time remaining in 01:33 format
+        let timeRemaining = Math.round(step[2] - timeElapsed)
+        let timeRemainingMinutes = Math.floor(timeRemaining / 60);
+        let timeRemainingSeconds = timeRemaining % 60;
+        // Add leading zero if seconds is less than 10
+        if (timeRemainingMinutes < 10) {
+            timeRemainingMinutes = "0" + timeRemainingMinutes;
+        }
+        if (timeRemainingSeconds < 10) {
+            timeRemainingSeconds = "0" + timeRemainingSeconds;
+        }
+        let timeRemainingStr = timeRemainingMinutes + ":" + timeRemainingSeconds;
+        $("#progress-bar-right-" + currentStep).text("- " + timeRemainingStr)
+    }
+
+    //======================================================================================================================
+    function updateProgressBarComplete(stepNum) {
+        console.log("updateProgressBarComplete: " + stepNum)
+        $("#progress-bar-" + stepNum).css("width", "100%")
+
+        let step = steps[stepNum]
+        let duration = step[2]
+        let durationMinutes = Math.floor(duration / 60);
+        let durationSeconds = duration % 60;
+        if (durationMinutes < 10) {
+            durationMinutes = "0" + durationMinutes;
+        }
+        // Add leading zero if seconds is less than 10
+        if (durationSeconds < 10) {
+            durationSeconds = "0" + durationSeconds;
+        }
+        durationStr = durationMinutes + ":" + durationSeconds;
+        $("#progress-bar-left-" + stepNum).text(durationStr)
+
+        $("#progress-bar-right-" + stepNum).text("- 00:00")
+
+    }
+   //======================================================================================================================
+    // Y O U T U B E    V I D E O   P L A Y E R  S E C T I O N
+    //======================================================================================================================
 
     //======================================================================================================================
     // This function creates an <iframe> (and YouTube player)
@@ -105,7 +348,7 @@
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
             height: '390',
-            width: '640',
+            width: '520',
             videoId: 'B8iFR13aeKs',
             playerVars: {
                 'playsinline': 1
@@ -153,75 +396,6 @@
         if (color) {
             document.getElementById('player').style.borderColor = color;
         }
-    }
-
-    //======================================================================================================================
-    function loadSteps() {
-
-        // Add a TR element for each step
-        $.each(steps, function (index, value) {
-            addStepRow(index, value[0], value[1], value[2]);
-        });
-    }
-
-    //======================================================================================================================
-    function addStepRow(stepNum, stepName, stepTime, duration) {
-        // Convert duration to minutes and seconds. Example: 90 secs = 1:30, 65 secs = 1:05
-        let durationMinutes = Math.floor(duration / 60);
-        let durationSeconds = duration % 60;
-        // Add leading zero if seconds is less than 10
-        if (durationSeconds < 10) {
-            durationSeconds = "0" + durationSeconds;
-        }
-        durationStr = durationMinutes + ":" + durationSeconds;
-
-        $("#steps-tbody").append("<tr><td>" + stepName + "</td><td>" + durationStr + "</td></tr>");
-        $("#steps-tbody").append(`<tr><td colspan='2'><div class='progress'> <div class='progress-bar' id='progress-bar-${stepNum}' role='progressbar' style='width: 0%' aria-valuenow='25' aria-valuemin='0' aria-valuemax='100'></div> </div></td></tr>`);
-    }
-
-    //======================================================================================================================
-    function start() {
-        initializeAudioContexts()
-        // Start a timer to update progress bar every second
-        setInterval(function () {
-            // Get the current time in seconds
-            let currentTime = player.getCurrentTime()
-            // Get the current step
-            let step = steps[currentStep]
-            // Get the start time of the current step in seconds
-            let minSecsStr = step[1]
-            let minSecs = minSecsStr.split(":");
-            let secs = parseInt(minSecs[0]) * 60 + parseInt(minSecs[1])
-            // Calculate the percentage of the video that has been played
-            let percentage = ((currentTime - secs) / step[2]) * 100
-            // Update the progress bar
-            $("#progress-bar-" + currentStep).css("width", percentage + "%")
-        }, 1000)
-        runStep(0)
-    }
-
-    //======================================================================================================================
-    function runStep(stepNum) {
-        if (stepNum >= steps.length) {
-            return
-        }
-        step = steps[stepNum]
-        minSecsStr = step[1]
-        // Convert minutes and seconds to seconds. Example: 1:30 = 90 secs, 1:05 = 65 secs
-        let minSecs = minSecsStr.split(":");
-        let secs = parseInt(minSecs[0]) * 60 + parseInt(minSecs[1])
-
-        player.seekTo(secs)
-        player.playVideo()
-        currentStep = stepNum
-        setTimeout(function () {
-            // Play a beep sound at the end of the step
-            playBeep(440, 1000, 'sine')
-            // Mark the progress bar complete
-            $("#progress-bar-" + stepNum).css("width", "100%")
-
-            runStep(stepNum + 1)
-        }, parseInt(step[2]) * 1000)
     }
 
     //======================================================================================================================
