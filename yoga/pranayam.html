@@ -249,7 +249,7 @@
 
         let htmlText = "<tr><td><span class='step-name'>" + stepName + "</span></td><td><span class='step-duration'>" + durationStr + "</span></td></tr>"
         htmlText += "<tr><td colspan='2' style='padding: 0px;'>"
-        htmlText += "  <div class='progress' style='background: #aaa; border-radius: 0; position: relative;'>"
+        htmlText += "  <div class='progress' style='background-image: linear-gradient(to right, #ccc, #555); border-radius: 0; position: relative;'>"
         htmlText += `    <div class='progress-bar overflow-visible' id='progress-bar-${stepNum}' role='progressbar' style='width: 0%; border-radius: 0;' aria-valuenow='25' aria-valuemin='0' aria-valuemax='100'>`
         htmlText += `      <span class='progress-bar-left' id='progress-bar-left-${stepNum}'></span>`
         htmlText += `      <span class='progress-bar-right' id='progress-bar-right-${stepNum}' style='color: white;'></span>`
