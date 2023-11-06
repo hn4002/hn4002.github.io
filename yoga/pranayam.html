@@ -50,6 +50,11 @@
                     <i class="bi-play"></i>
                     Start
                 </button>
+                <button type="button" class="btn btn-outline-primary" id="reset-button" style="margin: 5px 5px 5px 5px;"
+                    onclick="resetPranayam();">
+                    <i class="bi-arrow-clockwise"></i>
+                    Reset
+                </button>
             </div>
         </td>
     </tr>
@@ -69,6 +74,10 @@
 </table>
 
 <style>
+    #steps-tbody > tr > td {
+        padding: 10px 5px 1px 5px;
+    }
+
     .step-name {
         margin: 0px 8px 0px 8px;
     }
@@ -135,7 +144,7 @@
             let duration = $(this).data("duration")
             selectTotalDuration(duration)
         })
-        selectTotalDuration("15")
+        selectTotalDuration("45")
     });
 
     //======================================================================================================================
@@ -162,7 +171,7 @@
         })
 
         // Show the steps in the left panel
-        showStepsInPanel(totalDuration)
+        showStepsInPanel()
     }
 
     //======================================================================================================================
@@ -185,11 +194,30 @@
     }
 
     //======================================================================================================================
+    function resetPranayam() {
+        // Stop the progress bar timer
+        if (progressBarIntervalTimer != null) {
+            clearInterval(progressBarIntervalTimer)
+            progressBarIntervalTimer = null
+        }
+
+        // Stop the current step
+        stopStep(currentStep)
+
+        // Reset the steps in the left panel
+        showStepsInPanel()
+
+        // Enable the duration buttons and the start button
+        $(".duration-button").prop("disabled", false)
+        $("#start-button").prop("disabled", false)
+    }
+
+    //======================================================================================================================
     // L E F T  P A N E L   S E C T I O N
     //======================================================================================================================
 
     //======================================================================================================================
-    function showStepsInPanel(totalDuration) {
+    function showStepsInPanel() {
         // Clear $("#steps-tbody")
         $("#steps-tbody").empty();
 
