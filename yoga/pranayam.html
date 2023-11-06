@@ -63,7 +63,7 @@
     </tr>
     <tr>
         <td>
-            <table class="table-bordered">
+            <table class="table">
                 <tbody id="steps-tbody">
 
                 </tbody>
@@ -78,11 +78,11 @@
 
 <style>
     .step-name {
-        margin: 0px 3px 0px 3px;
+        margin: 0px 8px 0px 8px;
     }
 
     .step-duration {
-        margin: 0px 3px 0px 3px;
+        margin: 0px 8px 0px 8px;
     }
 
     .progress-bar-left {
@@ -143,7 +143,7 @@
             let duration = $(this).data("duration")
             selectTotalDuration(duration)
         })
-        selectTotalDuration("15")
+        selectTotalDuration("45")
     });
 
     //======================================================================================================================
@@ -346,9 +346,11 @@
     //======================================================================================================================
     // This is called by YouTube API initialization code.
     function onYouTubeIframeAPIReady() {
+        //let height = 390, width = 520 // This works on all devices and is close to actual dimensions of the video
+        let height = 380, width = 550   // This is for iPhone
         player = new YT.Player('player', {
-            height: '390',
-            width: '520',
+            height: height,
+            width: width,
             videoId: 'B8iFR13aeKs',
             playerVars: {
                 'playsinline': 1
