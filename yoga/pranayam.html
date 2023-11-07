@@ -164,7 +164,7 @@
 
     var stepsDefault = [
         // Step Name, Start Time, Step Duration (secs) for totalDuration=15m
-        //["Bhastrika", "05:39", 5],
+        //["Bhastrika", "05:39", 2],
         //["Kapalbhati", "09:40", 5],
         ["Bhastrika", "05:39", 60],
         ["Kapalbhati", "09:40", 300],
@@ -187,7 +187,7 @@
             let duration = $(this).data("duration")
             selectTotalDuration(duration)
         })
-        selectTotalDuration("45")
+        selectTotalDuration("30")
     });
 
     //======================================================================================================================
@@ -237,7 +237,7 @@
     }
 
     //======================================================================================================================
-    function resetPranayam() {
+    function stopPranayam() {
         // Stop the progress bar timer
         if (progressBarIntervalTimer != null) {
             clearInterval(progressBarIntervalTimer)
@@ -246,6 +246,12 @@
 
         // Stop the current step
         stopStep(currentStep, true)
+    }
+
+    //======================================================================================================================
+    function resetPranayam() {
+        // Stop Pranayam
+        stopPranayam()
 
         // Reset the steps in the left panel
         showStepsInPanel()
@@ -273,16 +279,7 @@
     //======================================================================================================================
     function addStepRowInPanel(stepNum, stepName, stepTime, duration) {
         // Convert duration to minutes and seconds. Example: 90 secs = 1:30, 65 secs = 1:05
-        let durationMinutes = Math.floor(duration / 60);
-        let durationSeconds = duration % 60;
-        if (durationMinutes < 10) {
-            durationMinutes = "0" + durationMinutes;
-        }
-        // Add leading zero if seconds is less than 10
-        if (durationSeconds < 10) {
-            durationSeconds = "0" + durationSeconds;
-        }
-        durationStr = durationMinutes + ":" + durationSeconds;
+        durationStr = convertToMMSS(duration)
 
         let htmlText = "<tr><td><span class='step-name'>" + stepName + "</span></td><td><span class='step-duration'>" + durationStr + "</span></td></tr>"
         htmlText += "<tr><td colspan='2' style='padding: 0px;'>"
@@ -300,6 +297,21 @@
 
     //======================================================================================================================
     function startStep(stepNum) {
+        if (stepNum >= steps.length) {
+            // All steps are complete
+            console.log("startStep: ALL STEPS COMPLETED")
+
+            // Stop Pranayam
+            stopPranayam()
+
+            // Play a beep sound at the end of the Pranayam
+            playBeep(220, 3000, 'sine')
+            // playBeep(440, 3000, 'sine')
+            // playBeep(880, 3000, 'sine')
+
+            return
+        }
+
         step = steps[stepNum]
         minSecsStr = step[1]
         // Convert minutes and seconds to seconds. Example: 1:30 = 90 secs, 1:05 = 65 secs
@@ -370,32 +382,14 @@
         // On the left side of the progress bar, show the time elapsed in 01:33 format
         let timeElapsedStr = "00:00"
         if (timeElapsedForCurrentStepSecs != 0) {
-            let timeElapsedMinutes = Math.floor(timeElapsedForCurrentStepSecs / 60);
-            let timeElapsedSeconds = timeElapsedForCurrentStepSecs % 60;
-            if (timeElapsedMinutes < 10) {
-                timeElapsedMinutes = "0" + timeElapsedMinutes;
-            }
-            // Add leading zero if seconds is less than 10
-            if (timeElapsedSeconds < 10) {
-                timeElapsedSeconds = "0" + timeElapsedSeconds;
-            }
-            timeElapsedStr = timeElapsedMinutes + ":" + timeElapsedSeconds;
+            timeElapsedStr = convertToMMSS(timeElapsedForCurrentStepSecs)
         }
         $("#progress-bar-left-" + currentStep).text(timeElapsedStr)
 
         // On the right side of the progress bar, show the time remaining in 01:33 format
         let timeRemainingStr = "00:00"
         if (timeRemainingSecs != 0) {
-            let timeRemainingMinutes = Math.floor(timeRemainingSecs / 60);
-            let timeRemainingSeconds = timeRemainingSecs % 60;
-            // Add leading zero if seconds is less than 10
-            if (timeRemainingMinutes < 10) {
-                timeRemainingMinutes = "0" + timeRemainingMinutes;
-            }
-            if (timeRemainingSeconds < 10) {
-                timeRemainingSeconds = "0" + timeRemainingSeconds;
-            }
-            timeRemainingStr = timeRemainingMinutes + ":" + timeRemainingSeconds;
+            timeRemainingStr = convertToMMSS(timeRemainingSecs)
         }
         $("#progress-bar-right-" + currentStep).text("-" + timeRemainingStr)
     }
@@ -517,6 +511,23 @@
        function clean() {
            events.forEach(e => b.removeEventListener(e, unlock));
        }
+    }
+
+    //======================================================================================================================
+    // U T I L I T Y   F U N C T I O N S
+    //======================================================================================================================
+    function convertToMMSS(seconds) {
+        let minutes = Math.floor(seconds / 60);
+        let secs = seconds % 60;
+        // Add leading zero if minutes is less than 10
+        if (minutes < 10) {
+            minutes = "0" + minutes;
+        }
+        // Add leading zero if seconds is less than 10
+        if (secs < 10) {
+            secs = "0" + secs;
+        }
+        return minutes + ":" + secs;
     }
 
 </script>
