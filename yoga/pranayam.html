@@ -105,6 +105,12 @@
       padding-right: 50px;
     }
 
+    .step-name-tr.active {
+        color: #e74c3c;
+        /* Make text bold */
+        font-weight: bold;
+    }
+
     .label-patanjali {
         color: #e74c3c;
     }
@@ -281,7 +287,8 @@
         // Convert duration to minutes and seconds. Example: 90 secs = 1:30, 65 secs = 1:05
         durationStr = convertToMMSS(duration)
 
-        let htmlText = "<tr><td><span class='step-name'>" + stepName + "</span></td><td><span class='step-duration'>" + durationStr + "</span></td></tr>"
+        let htmlText = ""
+        htmlText += `<tr class='step-name-tr' id='step-name-tr-${stepNum}' data-stepid='${stepNum}'><td><span class='step-name'>${stepName}</span></td><td><span class='step-duration'>${durationStr}</span></td></tr>`
         htmlText += "<tr><td colspan='2' style='padding: 0px;'>"
         htmlText += "  <div class='progress' style='background-image: linear-gradient(to right, #ccc, #555); border-radius: 0; position: relative;'>"
         htmlText += `    <div class='progress-bar bg-patanjali overflow-visible' id='progress-bar-${stepNum}' role='progressbar' style='width: 0%; border-radius: 0;' aria-valuenow='25' aria-valuemin='0' aria-valuemax='100'>`
@@ -293,6 +300,12 @@
         htmlText += ""
 
         $("#steps-tbody").append(htmlText)
+
+        // Clicking on a row should start the step
+        $(".step-name-tr").click(function () {
+            let stepNum = $(this).data("stepid")
+            startStep(stepNum)
+        })
     }
 
     //======================================================================================================================
@@ -312,15 +325,18 @@
             return
         }
 
+        currentStep = stepNum
+
+        // Update the step in the left panel
+        $(".step-name-tr").removeClass("active")
+        $("#step-name-tr-" + stepNum).addClass("active")
+
+        // Update the video position and play the video
         step = steps[stepNum]
         minSecsStr = step[1]
-        // Convert minutes and seconds to seconds. Example: 1:30 = 90 secs, 1:05 = 65 secs
-        let minSecs = minSecsStr.split(":");
-        let secs = parseInt(minSecs[0]) * 60 + parseInt(minSecs[1])
-
+        let secs = convertFromMMSS(minSecsStr)
         player.seekTo(secs)
         player.playVideo()
-        currentStep = stepNum
     }
 
     //======================================================================================================================
@@ -516,6 +532,9 @@
     //======================================================================================================================
     // U T I L I T Y   F U N C T I O N S
     //======================================================================================================================
+
+    //======================================================================================================================
+    // Convert seconds (int) to MM:SS format (string)
     function convertToMMSS(seconds) {
         let minutes = Math.floor(seconds / 60);
         let secs = seconds % 60;
@@ -528,6 +547,15 @@
             secs = "0" + secs;
         }
         return minutes + ":" + secs;
+    }
+
+    //======================================================================================================================
+    // Convert from MM:SS format (string) to seconds (int)
+    // Convert minutes and seconds to seconds. Example: 1:30 = 90 secs, 1:05 = 65 secs
+    function convertFromMMSS(minSecsStr) {
+        let minSecs = minSecsStr.split(":");
+        let secs = parseInt(minSecs[0]) * 60 + parseInt(minSecs[1])
+        return secs
     }
 
 </script>
