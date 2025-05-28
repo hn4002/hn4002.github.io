@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <meta http-equiv="Content-Language" content="en-US">
+        <meta name="author" content="Author Name">
+        <meta name="copyright" content="&copy; 2016 Author Name">
+        <meta name="description" content=" Home " />
+        
+        <!-- PWA - Progressive Web App - spcefic tags -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="theme-color" content="#317EFB"/>
+        <link rel="apple-touch-icon" href="/rocket.png">
+        
+        <link rel="manifest" href="manifest.json">
+
+        <title>MyTitle </title>
+    </head>
+
+    <body>
+         <section>
+            <div class="headline expanded">
+                <h3>
+                    <span>Yoga</span>
+                </h3>
+            </div>
+            <ul>
+                <li><a href="yoga/pranayam.html">Pranayam</a></li>
+                <li><a href="yoga/exercise.html">Exercise</a></li>
+            </ul>
+        </section>
+
+         <section>
+            <div class="headline expanded">
+                <h3>
+                    <span>Exercises</span>
+                </h3>
+            </div>
+            <ul>
+                <li><a href="exercises/shuolder-exercise-list.html">Shoulder Exercises</a></li>
+            </ul>
+        </section>
+
+    </body>
+
+
+    <style>
+        section {
+            margin: 20px 0;
+            padding: 0;
+        }
+
+        .headline {
+            background: rgba(206, 227, 245, 0.3) none repeat scroll 0 0;
+            /*
+            background: rgba(196, 217, 255, 0.3) none repeat scroll 0 0;
+            background: #009cde none repeat scroll 0 0;
+            */
+            border-radius: 5px;
+            margin: 10px 0;
+            padding: 10px;
+        }
+
+        .headline h3 {
+            font-size: 18px;
+            margin: 0;
+            padding: 0;
+        }
+        .headline h3 .glyphicon {
+            cursor: pointer;
+        }
+        .headline h3 span {
+            margin-right: 3px;
+        }
+        .headline h3 .badge {
+            position: relative;
+            top: -2px;
+        }
+        .headline .addToFav {
+            font-weight: 500;
+        }
+
+    </style>
+
+</html>
