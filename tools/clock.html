@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock</title>
+    <style>
+        /* Hide Scrollbar
+         Set the height of the body and HTML elements to 100% to make sure the canvas takes up the full viewport.
+         Explicitly remove any default margin or padding that could be causing overflow.
+         */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background-color: #333;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="clockCanvas" width="300" height="100"></canvas>
+
+    <script>
+        const canvas = document.getElementById('clockCanvas');
+        const ctx = canvas.getContext('2d');
+        var fontSize = -1;
+        const fontName = 'Arial';
+
+        //==============================================================================================================
+        // Resize canvas to fit the window
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Reset font size to -1 so it gets recalculated
+            fontSize = -1;
+        }
+
+        //==============================================================================================================
+        // Update the clock every second
+        function drawClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const formattedTime = [
+                hours.toString().padStart(2, '0'),
+                minutes.toString().padStart(2, '0'),
+                seconds.toString().padStart(2, '0')
+            ].join(':');
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (fontSize === -1) {
+                calculateFontSize(formattedTime);
+            }
+
+            ctx.font = `${fontSize}px ${fontName}`;
+            ctx.fillStyle = '#00c700';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            ctx.fillText(formattedTime, canvas.width / 2, canvas.height / 2);
+        }
+
+        //==============================================================================================================
+        // Calculate the font size based on the canvas width
+        function calculateFontSize(text) {
+            const formattedTimeMax = '00:00:00';
+            // Calculate the font size based on the canvas dimensions
+            const maxFontSize = Math.min(canvas.width , canvas.height ); // Adjust these values if needed
+            let fontSize = maxFontSize;
+            ctx.font = `${fontSize}px ${fontName}`;
+
+            // Adjust font size if text doesn't fit
+            while (ctx.measureText(formattedTimeMax).width > canvas.width * 0.98 + 5) { // 90% of canvas width
+                fontSize -= 1;
+                ctx.font = `${fontSize}px ${fontName}`;
+            }
+        }
+
+        //==============================================================================================================
+        // Initialize the clock
+        function updateClock() {
+            resizeCanvas();
+            drawClock();
+            setInterval(drawClock, 1000);
+        }
+
+        //==============================================================================================================
+        // Event listeners
+        window.addEventListener('resize', resizeCanvas);
+        window.onload = updateClock;
+    </script>
+</body>
+</html>
