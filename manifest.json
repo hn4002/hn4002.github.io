@@ -1,6 +1,6 @@
 {
-  "name": "Test App",
-  "short_name": "Test-it",
+  "name": "My Github Home Page",
+  "short_name": "my-ghhm",
   "start_url": "index.html",
   "scope": "./",
   "theme_color": "#317EFB",
@@ -19,5 +19,6 @@
   ],
   "theme_color": "#ffd31d",
   "background_color": "#333",
-  "display": "standalone"
+  "display": "standalone",
+ "display_override": ["tabbed"] 
 }
