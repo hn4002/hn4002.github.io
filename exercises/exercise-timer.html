@@ -380,12 +380,52 @@
 
         //======================================================================================================================
         function speak(text) {
-            const utterThis = new SpeechSynthesisUtterance(text);
+            // Guard: ensure the API exists
+            if (!('speechSynthesis' in window)) {
+                console.warn('speechSynthesis not supported in this browser')
+                return
+            }
 
-            // Comment out below voice selection if it doesn't work. Voice selection is optional.
-            utterThis.voice = synth.getVoices().filter(voice => voice.name === 'Google US English')[0];
+            // Actual speak operation
+            const doSpeak = () => {
+                try {
+                    const utterThis = new SpeechSynthesisUtterance(text);
 
-            synth.speak(utterThis);
+                    // Prefer a voice that matches the user's locale (en-US) if available,
+                    // otherwise pick the first available voice. Avoid hardcoding a voice name
+                    // like 'Google US English' because it may not exist on iOS devices.
+                    const voices = synth.getVoices() || [];
+                    let selected = null;
+                    if (voices.length > 0) {
+                        selected = voices.find(v => /en[-_]?us/i.test(v.lang)) || voices[0];
+                    }
+                    if (selected) {
+                        utterThis.voice = selected;
+                        utterThis.lang = selected.lang || 'en-US';
+                    } else {
+                        utterThis.lang = 'en-US';
+                    }
+
+                    synth.speak(utterThis);
+                } catch (e) {
+                    console.warn('speak() failed:', e)
+                }
+            }
+
+            // On some mobile browsers (iOS) voices may not be loaded immediately.
+            // If getVoices() returns an empty list, wait for the 'voiceschanged' event.
+            const voices = synth.getVoices();
+            if (!voices || voices.length === 0) {
+                const onVoicesChanged = function() {
+                    synth.removeEventListener('voiceschanged', onVoicesChanged);
+                    doSpeak();
+                }
+                synth.addEventListener('voiceschanged', onVoicesChanged);
+                // Trigger a load attempt
+                synth.getVoices();
+            } else {
+                doSpeak();
+            }
         }
 
 
