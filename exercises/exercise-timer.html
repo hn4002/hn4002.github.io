@@ -133,7 +133,8 @@
                 initializeAudioContexts()
                 startTimer()
 
-                // Enable pause button once timer starts
+                // Update Start button text to indicate running and enable Pause button
+                $("#start-button").text("Running…")
                 $("#pause-button").prop("disabled", false).removeAttr("disabled").text("Pause")
             })
 
@@ -150,10 +151,16 @@
                     timer = null
                     timerPaused = true
                     $(this).text("Resume")
+
+                    // reflect paused state in Start button text (not active)
+                    $("#start-button").text("Start")
                 } else {
                     // Resume
                     timerPaused = false
                     $(this).text("Pause")
+
+                    // indicate running
+                    $("#start-button").text("Running…")
                     createTimerInterval()
                 }
             })
@@ -241,8 +248,11 @@
                             // can start the next set. If no sets remain, leave the start button disabled.
                             if (sets > 0) {
                                 $("#start-button").removeAttr("disabled")
+                                // Ensure the text is reset when next run is possible
+                                $("#start-button").text("Start")
                             } else {
                                 $("#start-button").attr("disabled", "disabled")
+                                $("#start-button").text("Start")
                             }
 
                             // Timer stopped because set completed: disable pause button and reset pause state
