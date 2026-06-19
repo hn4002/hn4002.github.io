@@ -231,21 +231,29 @@
 
     //======================================================================================================================
     function startPranayam() {
-        initializeAudioContexts()
+        // Ensure audio is initialized and resumed in response to this user gesture.
+        initializeAudioContexts().then(function() {
+            // play a short confirmation beep to indicate audio is active
+            try {
+                playBeep(440, 200, 'sine')
+            } catch (e) {
+                console.warn('playBeep failed:', e)
+            }
 
-        // Disable the duration buttons and the start button
-        $(".duration-button").prop("disabled", true)
-        $("#start-button").prop("disabled", true)
+            // Disable the duration buttons and the start button
+            $(".duration-button").prop("disabled", true)
+            $("#start-button").prop("disabled", true)
 
-        // Start a timer to update progress bar every second and check for step completion
-        if (progressBarIntervalTimer == null) {
-            progressBarIntervalTimer = setInterval(function () {
-                checkForStepCompletion()
-            }, 1000)
-        }
+            // Start a timer to update progress bar every second and check for step completion
+            if (progressBarIntervalTimer == null) {
+                progressBarIntervalTimer = setInterval(function () {
+                    checkForStepCompletion()
+                }, 1000)
+            }
 
-        // Run the first step immediately. This step which will trigger the next step once it is done.
-        startStep(0)
+            // Run the first step immediately. This step which will trigger the next step once it is done.
+            startStep(0)
+        })
     }
 
     //======================================================================================================================
@@ -516,12 +524,27 @@
 
     //======================================================================================================================
     // On iOS, audio context must be initialized when the user clicks on a button. Otherwise audio will not work.
+    // Initialize and resume audio context. Returns a Promise that resolves when audio is ready.
     function initializeAudioContexts() {
         if (audioContext == null) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             unlockAudioContext(audioContext);
-            audioContext.resume()
+            // Return the resume promise so callers can play sound after it's active
+            return audioContext.resume().catch(function(err){
+                // Some browsers may reject resume if not allowed; still resolve to let UI proceed
+                console.warn('audioContext.resume() rejected:', err)
+                return Promise.resolve()
+            })
         }
+
+        // If already exists but suspended, try to resume; otherwise resolve immediately
+        if (audioContext.state === 'suspended') {
+            return audioContext.resume().catch(function(err){
+                console.warn('audioContext.resume() rejected:', err)
+                return Promise.resolve()
+            })
+        }
+        return Promise.resolve()
     }
 
     //======================================================================================================================
