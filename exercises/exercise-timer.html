@@ -120,6 +120,9 @@
             drawCountDown("PREP", 0, 0, 100, 0)
 
             $("#start-button").on("click", function() {
+                // Disable the start button immediately to prevent multiple clicks/start attempts
+                $(this).attr("disabled", "disabled")
+
                 initializeAudioContexts()
                 startTimer()
             })
@@ -185,9 +188,22 @@
                             timer = null
                             sets--
                             reps = repsTotal
-                            audioDone()
+                            if (sets > 0) {
+                                audioDone()
+                            } else {
+                                audioDone({msg: "all done"})
+                            }
+
                             // Update sets
                             $("#sets").html(`${sets} of ${setsTotal}`)
+
+                            // If there are more sets left, enable the start button so the user
+                            // can start the next set. If no sets remain, leave the start button disabled.
+                            if (sets > 0) {
+                                $("#start-button").removeAttr("disabled")
+                            } else {
+                                $("#start-button").attr("disabled", "disabled")
+                            }
                         }
                         // Update reps
                         $("#reps").html(`${reps} of ${repsTotal}`)
@@ -291,8 +307,8 @@
         }
 
         //======================================================================================================================
-        function audioDone() {
-            speak("done")
+        function audioDone({msg = "done"} = {}) {
+            speak(msg)
             playBeep(440, 2000, 'sine')
         }
 
