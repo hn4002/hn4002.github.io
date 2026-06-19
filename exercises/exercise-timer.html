@@ -15,6 +15,11 @@
   <body onload="onloadHandler()">
     <div class="container-fluid pg-3" style="padding-top: 10px;">
         <h3 id="page-title">Yoga Timer</h3>
+        <!-- Informational notice about speech on mobile devices -->
+        <div id="speech-notice" class="alert alert-info" role="alert" style="margin-top:8px; display: none;">
+            Note: voice prompts may require you to tap the Start button and ensure device volume is on. If you don't hear spoken prompts, the timer will fall back to beeps.
+            <button type="button" id="speech-notice-close" class="btn-close" aria-label="Close" style="float:right;" title="Dismiss"></button>
+        </div>
         <div class="row">
             <div class="col">
                 <table>
@@ -129,6 +134,20 @@
                 document.title = exerciseName
                 $("#page-title").text(exerciseName)
             }
+
+            // Show the speech notice by default on mobile user agents; allow user to dismiss
+            try {
+                var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+                if (isMobile) {
+                    $("#speech-notice").show()
+                }
+            } catch (e) {
+                // ignore
+            }
+
+            $("#speech-notice-close").on('click', function() {
+                $("#speech-notice").hide()
+            })
 
             drawCountDown("PREP", 0, 0, 100, 0)
 
@@ -380,9 +399,10 @@
 
         //======================================================================================================================
         function speak(text) {
-            // Guard: ensure the API exists
+            // Guard: ensure the API exists; otherwise fall back to beep
             if (!('speechSynthesis' in window)) {
-                console.warn('speechSynthesis not supported in this browser')
+                console.warn('speechSynthesis not supported in this browser — falling back to beep')
+                try { playBeep(440, 500, 'sine') } catch (e) { /* ignore */ }
                 return
             }
 
@@ -406,23 +426,47 @@
                         utterThis.lang = 'en-US';
                     }
 
+                    // If speech fails synchronously, catch and fallback to beep
+                    utterThis.onerror = function(ev) {
+                        console.warn('utterance error', ev)
+                        try { playBeep(440, 500, 'sine') } catch (e) { /* ignore */ }
+                    }
+
+                    // Also provide an onend safeguard (some platforms may not produce audio)
+                    utterThis.onend = function() {
+                        // no-op; successful end
+                    }
+
                     synth.speak(utterThis);
                 } catch (e) {
-                    console.warn('speak() failed:', e)
+                    console.warn('speak() failed:', e, ' — falling back to beep')
+                    try { playBeep(440, 500, 'sine') } catch (err) { /* ignore */ }
                 }
             }
 
             // On some mobile browsers (iOS) voices may not be loaded immediately.
-            // If getVoices() returns an empty list, wait for the 'voiceschanged' event.
+            // If getVoices() returns an empty list, wait for the 'voiceschanged' event
+            // but also set a short timeout to attempt speaking and fallback if nothing
+            // becomes available quickly.
             const voices = synth.getVoices();
             if (!voices || voices.length === 0) {
+                let voiced = false
                 const onVoicesChanged = function() {
+                    voiced = true
                     synth.removeEventListener('voiceschanged', onVoicesChanged);
                     doSpeak();
                 }
                 synth.addEventListener('voiceschanged', onVoicesChanged);
                 // Trigger a load attempt
                 synth.getVoices();
+
+                // If voices don't arrive within 800ms, attempt to speak anyway (catch will fallback)
+                setTimeout(function() {
+                    if (!voiced) {
+                        synth.removeEventListener('voiceschanged', onVoicesChanged);
+                        doSpeak();
+                    }
+                }, 800);
             } else {
                 doSpeak();
             }
