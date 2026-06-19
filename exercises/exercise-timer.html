@@ -14,7 +14,7 @@
   </head>
   <body onload="onloadHandler()">
     <div class="container-fluid pg-3" style="padding-top: 10px;">
-        <h3>Yoga Timer</h3>
+        <h3 id="page-title">Yoga Timer</h3>
         <div class="row">
             <div class="col">
                 <table>
@@ -94,6 +94,7 @@
         // Variables - these need to be below the above code
 
         // Parse numeric URL params (they arrive as strings)
+        var exerciseName = urlParams["exercise"] || ""
         var setsTotal = parseInt(urlParams["sets"]) || 0
         var sets = setsTotal
         var repsTotal = parseInt(urlParams["reps"]) || 0
@@ -123,6 +124,11 @@
             $("#reps").html(`${reps} of ${repsTotal}`)
             $("#work").html(`${work}`)
             $("#rest").html(`${rest}`)
+
+            if (exerciseName && exerciseName.trim() !== "") {
+                document.title = exerciseName
+                $("#page-title").text(exerciseName)
+            }
 
             drawCountDown("PREP", 0, 0, 100, 0)
 
