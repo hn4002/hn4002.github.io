@@ -38,6 +38,7 @@
         <div class="row" style="margin-top: 10px;">
             <div class="col">
                 <button id="start-button" type="button" class="btn btn-primary"> Start </button>
+                <button id="pause-button" type="button" class="btn btn-secondary" disabled style="margin-left:8px;">Pause</button>
             </div>
         </div>
         <div class="row">
@@ -92,15 +93,21 @@
         //======================================================================================================================
         // Variables - these need to be below the above code
 
-        var setsTotal = urlParams["sets"]
+        // Parse numeric URL params (they arrive as strings)
+        var setsTotal = parseInt(urlParams["sets"]) || 0
         var sets = setsTotal
-        var repsTotal = urlParams["reps"]
+        var repsTotal = parseInt(urlParams["reps"]) || 0
         var reps = repsTotal
-        var work = urlParams["work"]
-        var rest = urlParams["rest"]
-        var prep = urlParams["prep"]
+        var work = parseInt(urlParams["work"]) || 0
+        var rest = parseInt(urlParams["rest"]) || 0
+        var prep = parseInt(urlParams["prep"]) || 0
 
+        // Timer state
         var timer = null;
+        var timerCurrentStep = null
+        var timerCountdown = 0
+        var timerTimeoutSecs1 = 0
+        var timerPaused = false
 
         // Audio Context - make sure it gets initialized on a user interaction
         var audioContext = null
@@ -125,6 +132,30 @@
 
                 initializeAudioContexts()
                 startTimer()
+
+                // Enable pause button once timer starts
+                $("#pause-button").prop("disabled", false).removeAttr("disabled").text("Pause")
+            })
+
+            $("#pause-button").on("click", function() {
+                // Toggle pause/resume
+                if (!timer && !timerPaused) {
+                    // no running timer to pause
+                    return
+                }
+
+                if (!timerPaused) {
+                    // Pause
+                    clearInterval(timer)
+                    timer = null
+                    timerPaused = true
+                    $(this).text("Resume")
+                } else {
+                    // Resume
+                    timerPaused = false
+                    $(this).text("Pause")
+                    createTimerInterval()
+                }
             })
         }
 
@@ -158,28 +189,37 @@
         // Start the timer - this is run after the start button is clicked
         function startTimer() {
             if (timer != null) {
-                console.log("startTimer: Not proceeding with strting a new timer as `timer` is not null.")
+                console.log("startTimer: Not proceeding with starting a new timer as `timer` is not null.")
                 return
             }
-            let currentStep = "PREP"
-            let countdown = prep
-            timeoutSecs1 = countdown
 
-            // Update the countdown every 1 second
+            // Initialize globals used by the interval
+            timerCurrentStep = "PREP"
+            timerCountdown = prep
+            timerTimeoutSecs1 = timerCountdown
+            timerPaused = false
+
+            // Start interval
+            createTimerInterval()
+        }
+
+        // Create the interval using the timer* globals. Called by start and resume.
+        function createTimerInterval() {
+            // safety: if an interval already exists don't create another
+            if (timer != null) return
+
             timer = setInterval(function () {
-                countdown = countdown - 1
-                if (countdown < 0) {
-                    //beep()
-
-                    if (currentStep == "PREP" || currentStep == "REST") {
-                        currentStep = "WORK"
-                        countdown = work
-                        timeoutSecs1 = countdown
+                timerCountdown = timerCountdown - 1
+                if (timerCountdown < 0) {
+                    if (timerCurrentStep === "PREP" || timerCurrentStep === "REST") {
+                        timerCurrentStep = "WORK"
+                        timerCountdown = work
+                        timerTimeoutSecs1 = timerCountdown
                         audioWork()
                     } else {
-                        currentStep = "REST"
-                        countdown = rest
-                        timeoutSecs1 = countdown
+                        timerCurrentStep = "REST"
+                        timerCountdown = rest
+                        timerTimeoutSecs1 = timerCountdown
                         reps--
                         audioRest()
 
@@ -204,6 +244,15 @@
                             } else {
                                 $("#start-button").attr("disabled", "disabled")
                             }
+
+                            // Timer stopped because set completed: disable pause button and reset pause state
+                            $("#pause-button").prop("disabled", true).attr("disabled", "disabled").text("Pause")
+                            timerPaused = false
+
+                            // Update reps display
+                            $("#reps").html(`${reps} of ${repsTotal}`)
+
+                            return
                         }
                         // Update reps
                         $("#reps").html(`${reps} of ${repsTotal}`)
@@ -211,8 +260,9 @@
                 }
 
                 // Update the CountDown UI
-                drawCountDown(currentStep, 0, countdown, 100.0 - 100.0 * countdown/timeoutSecs1, reps)
-            }, 1000);
+                let pctDone = timerTimeoutSecs1 ? 100.0 - 100.0 * timerCountdown / timerTimeoutSecs1 : 100.0
+                drawCountDown(timerCurrentStep, 0, timerCountdown, pctDone, reps)
+            }, 1000)
         }
 
         //======================================================================================================================
